@@ -48,6 +48,9 @@ nvim-manager test NvChad
 nvim-manager patch NvChad nvchad-vim-uv-fix.patch
 nvim-manager add NvChad https://github.com/NvChad/NvChad
 nvim-manager remove NvChad
+nvim-manager install-lazyvim
+nvim-manager install-astronvim
+nvim-manager install-nvchad
 nvim-manager gui generate neovide
 nvim-manager gui cleanup
 nvim-manager gui list

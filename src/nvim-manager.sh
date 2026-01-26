@@ -17,6 +17,9 @@ Commands:
   patch [config] [patch]     Apply a patch to a config
   add <name> <git-url>       Clone a config into ~/.config/<name>
   remove <name>              Remove a config directory
+  install-lazyvim            Install LazyVim starter into ~/.config/LazyVim
+  install-astronvim          Install AstroNvim template into ~/.config/AstroNvim
+  install-nvchad             Install NvChad starter into ~/.config/NvChad
   gui generate [type]        Generate GUI launchers in ~/.local/share/applications
   gui cleanup                Remove generated GUI launchers
   gui list                   List generated GUI launchers
@@ -172,6 +175,66 @@ EOF
   echo "OK Generated launchers in $dir"
 }
 
+install_lazyvim() {
+  local target="$NVIM_CONFIG_DIR/LazyVim"
+  local repo="https://github.com/LazyVim/starter"
+
+  if [[ -e "$target" ]]; then
+    echo "ERR Target already exists: $target" >&2
+    return 1
+  fi
+
+  echo "Cloning LazyVim starter into $target..."
+  if git clone "$repo" "$target"; then
+    rm -rf "$target/.git"
+    echo "OK LazyVim starter installed"
+    echo "Next: NVIM_APPNAME=LazyVim nvim"
+  else
+    echo "ERR Clone failed"
+    return 1
+  fi
+}
+
+install_astronvim() {
+  local target="$NVIM_CONFIG_DIR/AstroNvim"
+  local repo="https://github.com/AstroNvim/template"
+
+  if [[ -e "$target" ]]; then
+    echo "ERR Target already exists: $target" >&2
+    return 1
+  fi
+
+  echo "Cloning AstroNvim template into $target..."
+  if git clone --depth 1 "$repo" "$target"; then
+    rm -rf "$target/.git"
+    echo "OK AstroNvim template installed"
+    echo "Next: NVIM_APPNAME=AstroNvim nvim"
+  else
+    echo "ERR Clone failed"
+    return 1
+  fi
+}
+
+install_nvchad() {
+  local target="$NVIM_CONFIG_DIR/NvChad"
+  local repo="https://github.com/NvChad/starter"
+
+  if [[ -e "$target" ]]; then
+    echo "ERR Target already exists: $target" >&2
+    return 1
+  fi
+
+  echo "Cloning NvChad starter into $target..."
+  if git clone --depth 1 "$repo" "$target"; then
+    echo "OK NvChad starter installed"
+    echo "Note: you can remove .git now or after first run."
+    echo "Next: NVIM_APPNAME=NvChad nvim"
+  else
+    echo "ERR Clone failed"
+    return 1
+  fi
+}
+
 _test_config() {
   local config="$1"
   local nvim_appname=""
@@ -244,6 +307,15 @@ main() {
     remove)
       shift
       remove_config "${1:-}"
+      ;;
+    install-lazyvim)
+      install_lazyvim
+      ;;
+    install-astronvim)
+      install_astronvim
+      ;;
+    install-nvchad)
+      install_nvchad
       ;;
     test)
       shift

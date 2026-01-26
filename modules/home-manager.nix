@@ -15,6 +15,16 @@ let
       git
       neovim
       desktop-file-utils
+      gcc
+      gnumake
+      tree-sitter
+      wl-clipboard
+      ripgrep
+      lazygit
+      gdu
+      bottom
+      python3
+      nodejs
     ];
     text = builtins.readFile ../src/nvim-manager.sh;
   };
@@ -64,6 +74,31 @@ in {
       description = "The nvim-manager package to install.";
     };
 
+    installExtras = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Install extra tools commonly used by AstroNvim/LazyVim (ripgrep, lazygit, go, bottom, python, node, tree-sitter, clipboard).";
+    };
+
+    extraPackages = lib.mkOption {
+      type = lib.types.listOf lib.types.package;
+      default = with pkgs; [
+        neovim
+        tree-sitter
+        wl-clipboard
+        ripgrep
+        lazygit
+        gdu
+        bottom
+        python3
+        nodejs
+        gcc
+        gnumake
+        git
+      ];
+      description = "Extra packages to install when installExtras is enabled.";
+    };
+
     patchesPath = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
       default = ./patches;
@@ -94,7 +129,7 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-    home.packages = [ cfg.package ];
+    home.packages = [ cfg.package ] ++ lib.optionals cfg.installExtras cfg.extraPackages;
 
     xdg.enable = true;
 

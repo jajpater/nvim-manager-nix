@@ -24,6 +24,16 @@
             git
             neovim
             desktop-file-utils
+            gcc
+            gnumake
+            tree-sitter
+            wl-clipboard
+            ripgrep
+            lazygit
+            gdu
+            bottom
+            python3
+            nodejs
           ];
           text = builtins.readFile ./src/nvim-manager.sh;
         };
