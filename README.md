@@ -53,9 +53,18 @@ nvim-manager gui cleanup
 nvim-manager gui list
 ```
 
+## Environment
+
+```bash
+NVIM_CONFIG_DIR=~/.config
+NVIM_MANAGER_PATCHES_DIR=~/.config/nvim-manager/patches
+NVIM_MANAGER_GUI_DIR=~/.local/share/applications
+NVIM_MANAGER_GUI_TYPE=neovide
+```
+
 ## Notes
 
 - GUI launchers are managed declaratively via Home Manager.
 - Patch files are linked to `~/.config/nvim-manager/patches` when enabled.
 - Adding/removing configs via `nvim-manager` does not require a rebuild, but GUI launchers (if configured) update on rebuild.
-- For ad-hoc launchers without rebuilds, use `nvim-manager gui generate`.
+- For ad-hoc launchers without rebuilds, use `nvim-manager gui generate` (writes `.desktop` files to `~/.local/share/applications`).
