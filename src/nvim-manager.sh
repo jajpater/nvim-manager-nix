@@ -19,7 +19,7 @@ Commands:
   remove <name>              Remove a config directory
   install-lazyvim            Install LazyVim starter into ~/.config/LazyVim
   install-astronvim          Install AstroNvim template into ~/.config/AstroNvim
-  install-nvchad             Install NvChad starter into ~/.config/NvChad
+  install-nvchad [--remove-git]  Install NvChad starter into ~/.config/NvChad
   gui generate [type]        Generate GUI launchers in ~/.local/share/applications
   gui cleanup                Remove generated GUI launchers
   gui list                   List generated GUI launchers
@@ -216,6 +216,10 @@ install_astronvim() {
 }
 
 install_nvchad() {
+  local remove_git=0
+  if [[ "${1:-}" == "--remove-git" ]]; then
+    remove_git=1
+  fi
   local target="$NVIM_CONFIG_DIR/NvChad"
   local repo="https://github.com/NvChad/starter"
 
@@ -226,8 +230,13 @@ install_nvchad() {
 
   echo "Cloning NvChad starter into $target..."
   if git clone --depth 1 "$repo" "$target"; then
-    echo "OK NvChad starter installed"
-    echo "Note: you can remove .git now or after first run."
+    if [[ $remove_git -eq 1 ]]; then
+      rm -rf "$target/.git"
+      echo "OK NvChad starter installed (git metadata removed)"
+    else
+      echo "OK NvChad starter installed (git metadata kept)"
+      echo "Remove later with: rm -rf \"$target/.git\""
+    fi
     echo "Next: NVIM_APPNAME=NvChad nvim"
   else
     echo "ERR Clone failed"
@@ -315,7 +324,8 @@ main() {
       install_astronvim
       ;;
     install-nvchad)
-      install_nvchad
+      shift
+      install_nvchad "${1:-}"
       ;;
     test)
       shift

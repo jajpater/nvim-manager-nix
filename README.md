@@ -51,6 +51,7 @@ nvim-manager remove NvChad
 nvim-manager install-lazyvim
 nvim-manager install-astronvim
 nvim-manager install-nvchad
+nvim-manager install-nvchad --remove-git
 nvim-manager gui generate neovide
 nvim-manager gui cleanup
 nvim-manager gui list
