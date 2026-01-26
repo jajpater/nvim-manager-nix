@@ -49,9 +49,15 @@ nvim-manager patch NvChad nvchad-vim-uv-fix.patch
 nvim-manager add NvChad https://github.com/NvChad/NvChad
 nvim-manager remove NvChad
 nvim-manager install-lazyvim
+nvim-manager install-lazyvim --launcher lazyvim
 nvim-manager install-astronvim
+nvim-manager install-astronvim --launcher astronvim
 nvim-manager install-nvchad
 nvim-manager install-nvchad --remove-git
+nvim-manager install-nvchad --launcher nvchad
+nvim-manager install-nvchad --launcher nvchad --no-prompt
+nvim-manager install MyConfig https://github.com/owner/repo --launcher myconfig
+nvim-manager install-launcher lazyvim LazyVim
 nvim-manager gui generate neovide
 nvim-manager gui cleanup
 nvim-manager gui list
@@ -64,6 +70,7 @@ NVIM_CONFIG_DIR=~/.config
 NVIM_MANAGER_PATCHES_DIR=~/.config/nvim-manager/patches
 NVIM_MANAGER_GUI_DIR=~/.local/share/applications
 NVIM_MANAGER_GUI_TYPE=neovide
+NVIM_MANAGER_BIN_DIR=~/.local/bin
 ```
 
 ## Notes

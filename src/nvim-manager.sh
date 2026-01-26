@@ -17,9 +17,12 @@ Commands:
   patch [config] [patch]     Apply a patch to a config
   add <name> <git-url>       Clone a config into ~/.config/<name>
   remove <name>              Remove a config directory
-  install-lazyvim            Install LazyVim starter into ~/.config/LazyVim
-  install-astronvim          Install AstroNvim template into ~/.config/AstroNvim
-  install-nvchad [--remove-git]  Install NvChad starter into ~/.config/NvChad
+  install-lazyvim [--launcher NAME]            Install LazyVim starter into ~/.config/LazyVim
+  install-astronvim [--launcher NAME]          Install AstroNvim template into ~/.config/AstroNvim
+  install-nvchad [--remove-git] [--launcher NAME]  Install NvChad starter into ~/.config/NvChad
+  install <name> <git-url> [--remove-git] [--launcher NAME] [--no-prompt]
+                           Install any config repo into ~/.config/<name>
+  install-launcher <name> <appname>  Create a launcher script in ~/.local/bin
   gui generate [type]        Generate GUI launchers in ~/.local/share/applications
   gui cleanup                Remove generated GUI launchers
   gui list                   List generated GUI launchers
@@ -30,6 +33,7 @@ Environment:
   NVIM_MANAGER_PATCHES_DIR   Patch directory (default: ~/.config/nvim-manager/patches)
   NVIM_MANAGER_GUI_DIR       Desktop entries dir (default: ~/.local/share/applications)
   NVIM_MANAGER_GUI_TYPE      neovide or nvim-qt (default: neovide)
+  NVIM_MANAGER_BIN_DIR       Launcher scripts dir (default: ~/.local/bin)
 USAGE
 }
 
@@ -175,7 +179,88 @@ EOF
   echo "OK Generated launchers in $dir"
 }
 
+bin_dir() {
+  echo "${NVIM_MANAGER_BIN_DIR:-$HOME/.local/bin}"
+}
+
+install_launcher() {
+  local name="$1"
+  local appname="$2"
+  local dir
+  dir="$(bin_dir)"
+
+  if [[ -z "$name" || -z "$appname" ]]; then
+    echo "Usage: nvim-manager install-launcher <name> <appname>" >&2
+    return 1
+  fi
+
+  mkdir -p "$dir"
+  local target="$dir/$name"
+
+  if [[ -e "$target" ]]; then
+    echo "ERR Launcher already exists: $target" >&2
+    return 1
+  fi
+
+  cat > "$target" <<EOF
+#!/usr/bin/env bash
+exec env NVIM_APPNAME=${appname} nvim "\$@"
+EOF
+  chmod +x "$target"
+  echo "OK Created launcher: $target"
+}
+
+prompt_launcher_name() {
+  local default_name="$1"
+  local appname="$2"
+  local no_prompt="${3:-0}"
+  if [[ "$no_prompt" -eq 1 ]]; then
+    return 1
+  fi
+  local answer
+  read -r -p "Create launcher script? [y/N] " answer
+  if [[ ! "$answer" =~ ^[yY]$ ]]; then
+    return 1
+  fi
+  read -r -p "Launcher name [$default_name]: " name
+  name="${name:-$default_name}"
+  install_launcher "$name" "$appname"
+}
+
+auto_launcher_if_needed() {
+  local launcher="$1"
+  local default_name="$2"
+  local appname="$3"
+  local no_prompt="$4"
+  if [[ -n "$launcher" ]]; then
+    install_launcher "$launcher" "$appname"
+    return 0
+  fi
+  if [[ "$no_prompt" -eq 1 ]]; then
+    install_launcher "$default_name" "$appname"
+    return 0
+  fi
+  prompt_launcher_name "$default_name" "$appname" "$no_prompt" || true
+}
+
 install_lazyvim() {
+  local launcher=""
+  local no_prompt=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --launcher)
+        launcher="${2:-}"
+        shift 2
+        ;;
+      --no-prompt)
+        no_prompt=1
+        shift
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
   local target="$NVIM_CONFIG_DIR/LazyVim"
   local repo="https://github.com/LazyVim/starter"
 
@@ -189,6 +274,7 @@ install_lazyvim() {
     rm -rf "$target/.git"
     echo "OK LazyVim starter installed"
     echo "Next: NVIM_APPNAME=LazyVim nvim"
+    auto_launcher_if_needed "$launcher" "lazyvim" "LazyVim" "$no_prompt"
   else
     echo "ERR Clone failed"
     return 1
@@ -196,6 +282,23 @@ install_lazyvim() {
 }
 
 install_astronvim() {
+  local launcher=""
+  local no_prompt=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --launcher)
+        launcher="${2:-}"
+        shift 2
+        ;;
+      --no-prompt)
+        no_prompt=1
+        shift
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
   local target="$NVIM_CONFIG_DIR/AstroNvim"
   local repo="https://github.com/AstroNvim/template"
 
@@ -209,6 +312,7 @@ install_astronvim() {
     rm -rf "$target/.git"
     echo "OK AstroNvim template installed"
     echo "Next: NVIM_APPNAME=AstroNvim nvim"
+    auto_launcher_if_needed "$launcher" "astronvim" "AstroNvim" "$no_prompt"
   else
     echo "ERR Clone failed"
     return 1
@@ -217,9 +321,27 @@ install_astronvim() {
 
 install_nvchad() {
   local remove_git=0
-  if [[ "${1:-}" == "--remove-git" ]]; then
-    remove_git=1
-  fi
+  local launcher=""
+  local no_prompt=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --remove-git)
+        remove_git=1
+        shift
+        ;;
+      --launcher)
+        launcher="${2:-}"
+        shift 2
+        ;;
+      --no-prompt)
+        no_prompt=1
+        shift
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
   local target="$NVIM_CONFIG_DIR/NvChad"
   local repo="https://github.com/NvChad/starter"
 
@@ -238,6 +360,61 @@ install_nvchad() {
       echo "Remove later with: rm -rf \"$target/.git\""
     fi
     echo "Next: NVIM_APPNAME=NvChad nvim"
+    auto_launcher_if_needed "$launcher" "nvchad" "NvChad" "$no_prompt"
+  else
+    echo "ERR Clone failed"
+    return 1
+  fi
+}
+
+install_generic() {
+  local name="$1"
+  local repo="$2"
+  shift 2
+  local remove_git=0
+  local launcher=""
+  local no_prompt=0
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --remove-git)
+        remove_git=1
+        shift
+        ;;
+      --launcher)
+        launcher="${2:-}"
+        shift 2
+        ;;
+      --no-prompt)
+        no_prompt=1
+        shift
+        ;;
+      *)
+        shift
+        ;;
+    esac
+  done
+
+  if [[ -z "$name" || -z "$repo" ]]; then
+    echo "Usage: nvim-manager install <name> <git-url> [--remove-git] [--launcher NAME] [--no-prompt]" >&2
+    return 1
+  fi
+
+  local target="$NVIM_CONFIG_DIR/$name"
+  if [[ -e "$target" ]]; then
+    echo "ERR Target already exists: $target" >&2
+    return 1
+  fi
+
+  echo "Cloning $repo into $target..."
+  if git clone "$repo" "$target"; then
+    if [[ $remove_git -eq 1 ]]; then
+      rm -rf "$target/.git"
+      echo "OK Installed (git metadata removed)"
+    else
+      echo "OK Installed (git metadata kept)"
+    fi
+    echo "Next: NVIM_APPNAME=$name nvim"
+    auto_launcher_if_needed "$launcher" "${name,,}" "$name" "$no_prompt"
   else
     echo "ERR Clone failed"
     return 1
@@ -318,14 +495,24 @@ main() {
       remove_config "${1:-}"
       ;;
     install-lazyvim)
-      install_lazyvim
+      shift
+      install_lazyvim "$@"
       ;;
     install-astronvim)
-      install_astronvim
+      shift
+      install_astronvim "$@"
       ;;
     install-nvchad)
       shift
-      install_nvchad "${1:-}"
+      install_nvchad "$@"
+      ;;
+    install)
+      shift
+      install_generic "$@"
+      ;;
+    install-launcher)
+      shift
+      install_launcher "${1:-}" "${2:-}"
       ;;
     test)
       shift
