@@ -101,7 +101,7 @@ in {
 
     patchesPath = lib.mkOption {
       type = lib.types.nullOr lib.types.path;
-      default = ./patches;
+      default = ../patches;
       description = "Path to patch files that should be linked into ~/.config/nvim-manager/patches.";
     };
 
