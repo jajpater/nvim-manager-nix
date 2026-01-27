@@ -36,6 +36,9 @@ Declarative Neovim config manager for NixOS/Home Manager. Provides:
     gui.enable = true;
     gui.type = "neovide"; # or "nvim-qt"
     gui.configs = [ "NvChad" "LazyVim" "AstroNvim" ];
+
+    # Optional: add extra tools (python3 not included by default)
+    # extraPackages = with pkgs; [ python3 ];
   };
 }
 ```
@@ -79,3 +82,4 @@ NVIM_MANAGER_BIN_DIR=~/.local/bin
 - Patch files are linked to `~/.config/nvim-manager/patches` when enabled.
 - Adding/removing configs via `nvim-manager` does not require a rebuild, but GUI launchers (if configured) update on rebuild.
 - For ad-hoc launchers without rebuilds, use `nvim-manager gui generate` (writes `.desktop` files to `~/.local/share/applications`).
+- `python3` is intentionally not included in defaults to avoid conflicts with custom Python environments; add it via `extraPackages` if needed.

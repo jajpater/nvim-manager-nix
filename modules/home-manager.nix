@@ -23,7 +23,6 @@ let
       lazygit
       gdu
       bottom
-      python3
       nodejs
     ];
     text = builtins.readFile ../src/nvim-manager.sh;
@@ -90,7 +89,6 @@ in {
         lazygit
         gdu
         bottom
-        python3
         nodejs
         gcc
         gnumake
