@@ -12,7 +12,7 @@ usage() {
 Usage: nvim-manager <command> [args]
 
 Commands:
-  list                       List available configs
+  list                       List installed configs and CLI launchers
   test [config]              Test a config (headless)
   patch [config] [patch]     Apply a patch to a config
   add <name> <git-url>       Clone a config into ~/.config/<name>
@@ -23,6 +23,8 @@ Commands:
   install <name> <git-url> [--remove-git] [--launcher NAME] [--no-prompt]
                            Install any config repo into ~/.config/<name>
   install-launcher <name> <appname>  Create a launcher script in ~/.local/bin
+  create-launcher <name> <appname>   Alias for install-launcher
+  rename-launcher <old> <new>        Rename an existing launcher in ~/.local/bin
   gui generate [type]        Generate GUI launchers in ~/.local/share/applications
   gui cleanup                Remove generated GUI launchers
   gui list                   List generated GUI launchers
@@ -54,6 +56,40 @@ list_configs() {
   if [[ $found -eq 0 ]]; then
     echo "(no configs found)"
   fi
+}
+
+list_launchers() {
+  local dir
+  dir="$(bin_dir)"
+  echo "Installed CLI launchers:"
+  echo "========================"
+  echo "Directory: $dir"
+
+  if [[ ! -d "$dir" ]]; then
+    echo "(no launchers found)"
+    return 0
+  fi
+
+  local found=0
+  while IFS= read -r -d '' launcher; do
+    local name appname
+    name="$(basename "$launcher")"
+    appname="$(sed -n 's/.*NVIM_APPNAME=\([^[:space:]]\+\).*/\1/p' "$launcher" | head -n1)"
+    if [[ -n "$appname" ]]; then
+      echo "OK  $name -> $appname"
+      found=1
+    fi
+  done < <(find "$dir" -maxdepth 1 -type f -perm -u+x -print0 2>/dev/null)
+
+  if [[ $found -eq 0 ]]; then
+    echo "(no launchers found)"
+  fi
+}
+
+list_all() {
+  list_configs
+  echo
+  list_launchers
 }
 
 add_config() {
@@ -208,6 +244,34 @@ exec env NVIM_APPNAME=${appname} nvim "\$@"
 EOF
   chmod +x "$target"
   echo "OK Created launcher: $target"
+}
+
+rename_launcher() {
+  local old_name="$1"
+  local new_name="$2"
+  local dir
+  dir="$(bin_dir)"
+
+  if [[ -z "$old_name" || -z "$new_name" ]]; then
+    echo "Usage: nvim-manager rename-launcher <old> <new>" >&2
+    return 1
+  fi
+
+  local old_path="$dir/$old_name"
+  local new_path="$dir/$new_name"
+
+  if [[ ! -e "$old_path" ]]; then
+    echo "ERR Launcher not found: $old_path" >&2
+    return 1
+  fi
+
+  if [[ -e "$new_path" ]]; then
+    echo "ERR Target launcher already exists: $new_path" >&2
+    return 1
+  fi
+
+  mv "$old_path" "$new_path"
+  echo "OK Renamed launcher: $old_name -> $new_name"
 }
 
 prompt_launcher_name() {
@@ -484,7 +548,7 @@ apply_patch() {
 main() {
   case "${1:-}" in
     list)
-      list_configs
+      list_all
       ;;
     add)
       shift
@@ -513,6 +577,14 @@ main() {
     install-launcher)
       shift
       install_launcher "${1:-}" "${2:-}"
+      ;;
+    create-launcher)
+      shift
+      install_launcher "${1:-}" "${2:-}"
+      ;;
+    rename-launcher)
+      shift
+      rename_launcher "${1:-}" "${2:-}"
       ;;
     test)
       shift
