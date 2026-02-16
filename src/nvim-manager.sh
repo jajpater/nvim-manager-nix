@@ -86,10 +86,43 @@ list_launchers() {
   fi
 }
 
+list_gui_launchers() {
+  local dir
+  dir="$(gui_dir)"
+  echo "Installed GUI launchers:"
+  echo "========================"
+  echo "Directory: $dir"
+
+  if [[ ! -d "$dir" ]]; then
+    echo "(no GUI launchers found)"
+    return 0
+  fi
+
+  local found=0
+  while IFS= read -r -d '' desktop; do
+    local file base type name
+    file="$(basename "$desktop")"
+    base="${file#nvim-manager-}"
+    base="${base%.desktop}"
+    type="${base%%-*}"
+    name="${base#*-}"
+    if [[ -n "$type" && -n "$name" && "$name" != "$base" ]]; then
+      echo "OK  $file -> $type/$name"
+      found=1
+    fi
+  done < <(find "$dir" -maxdepth 1 -type f -name 'nvim-manager-*.desktop' -print0 2>/dev/null)
+
+  if [[ $found -eq 0 ]]; then
+    echo "(no GUI launchers found)"
+  fi
+}
+
 list_all() {
   list_configs
   echo
   list_launchers
+  echo
+  list_gui_launchers
 }
 
 add_config() {

@@ -84,5 +84,5 @@ NVIM_MANAGER_BIN_DIR=~/.local/bin
 - Patch files are linked to `~/.config/nvim-manager/patches` when enabled.
 - Adding/removing configs via `nvim-manager` does not require a rebuild, but GUI launchers (if configured) update on rebuild.
 - For ad-hoc launchers without rebuilds, use `nvim-manager gui generate` (writes `.desktop` files to `~/.local/share/applications`).
-- `nvim-manager list` shows both installed configs and installed CLI launchers (`~/.local/bin`).
+- `nvim-manager list` shows installed configs, CLI launchers (`~/.local/bin`), and generated GUI launchers (`~/.local/share/applications`).
 - `python3` is intentionally not included in defaults to avoid conflicts with custom Python environments; add it via `extraPackages` if needed.
